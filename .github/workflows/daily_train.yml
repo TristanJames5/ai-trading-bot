@@ -28,6 +28,9 @@ jobs:
       - name: Train PRO MAX (Swing) models
         run: python train_swing.py
 
+      - name: Train GURU AI models
+        run: python train_guru.py
+
       - name: Commit updated models to GitHub
         run: |
           git config user.name "AI Trading Bot"

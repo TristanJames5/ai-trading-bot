@@ -3,6 +3,7 @@ import time
 import pandas as pd
 import numpy as np
 import yfinance as yf
+import xgboost as xgb
 from datetime import datetime, timezone
 from notifier import send_discord_alert
 from local_db import save_signal
@@ -16,6 +17,18 @@ PAIRS = {
     "NAS100": {"ticker": "NQ=F", "sl_atr": 1.0, "tp_atr": 3.0},
     "BTC":    {"ticker": "BTC-USD", "sl_atr": 1.5, "tp_atr": 4.5}
 }
+
+MODELS_DIR = "models"
+guru_models = {}
+
+def load_guru_models():
+    global guru_models
+    for pair in PAIRS:
+        path = f"{MODELS_DIR}/guru_{pair}_model.json"
+        if os.path.exists(path):
+            m = xgb.XGBClassifier()
+            m.load_model(path)
+            guru_models[pair] = m
 
 # ─────────────────────────────────────────
 # GURU 1: GEEKV1 (Market Mechanics / Brad Goh)
@@ -149,9 +162,10 @@ def insiderv1_logic(df, current_price, atr):
 def run_guru_engine(interval="5m", period="5d"):
     print("=" * 55)
     print(f"  GURU ENGINE SCAN | Interval: {interval}")
-    print("  Bots: geekv1, sciv1, Insiderv1")
+    print("  Bots: geekv1, sciv1, Insiderv1 (With AI Layer)")
     print("=" * 55)
     
+    load_guru_models()
     now_utc = datetime.now(timezone.utc)
     
     for pair, cfg in PAIRS.items():
@@ -170,6 +184,13 @@ def run_guru_engine(interval="5m", period="5d"):
                             abs(df['Low'] - df['Close'].shift(1))))
             df['ATR'] = tr.rolling(14).mean()
             
+            # Machine Learning Features
+            df['RSI'] = 100 - (100 / (1 + df['Close'].diff().clip(lower=0).rolling(14).mean() / (-df['Close'].diff().clip(upper=0)).rolling(14).mean().replace(0, np.nan)))
+            df['Body_Norm'] = abs(df['Close'] - df['Open']) / df['ATR']
+            df['EMA9'] = df['Close'].ewm(span=9).mean()
+            df['EMA21'] = df['Close'].ewm(span=21).mean()
+            df['Trend'] = np.where(df['EMA9'] > df['EMA21'], 1, -1)
+            
             current_price = float(df['Close'].iloc[-1])
             atr = float(df['ATR'].iloc[-1])
             
@@ -178,6 +199,14 @@ def run_guru_engine(interval="5m", period="5d"):
             sci_fire, sci_dir = sciv1_logic(df.copy(), current_price, atr)
             insider_fire, insider_dir = insiderv1_logic(df.copy(), current_price, atr)
             
+            # AI Probability calculation
+            win_prob = 0.5
+            if pair in guru_models:
+                # Features: ['RSI', 'Body_Norm', 'Trend']
+                row = df.iloc[-1]
+                feat_vec = [[row.get('RSI', 50), row.get('Body_Norm', 1.0), row.get('Trend', 1)]]
+                win_prob = float(guru_models[pair].predict_proba(feat_vec)[0][1])
+            
             # Package and Send Signals
             for fire, direction, engine_name in [
                 (geek_fire, geek_dir, "geekv1 (Market Mechanics)"),
@@ -185,6 +214,11 @@ def run_guru_engine(interval="5m", period="5d"):
                 (insider_fire, insider_dir, "Insiderv1 (ICT / SMC)")
             ]:
                 if fire:
+                    # AI Filter
+                    if win_prob < 0.52:
+                        print(f"  [{pair}] {engine_name} setup formed, but AI rejected it (Prob: {win_prob*100:.1f}%)")
+                        continue
+                        
                     sl = current_price - (atr * cfg['sl_atr']) if direction == "LONG" else current_price + (atr * cfg['sl_atr'])
                     tp = current_price + (atr * cfg['tp_atr']) if direction == "LONG" else current_price - (atr * cfg['tp_atr'])
                     
@@ -196,14 +230,14 @@ def run_guru_engine(interval="5m", period="5d"):
                         "tp": round(tp, 5),
                         "grade": "A",
                         "score": 100,
-                        "win_prob": 0.80, # Pure rules-based, no ML yet
+                        "win_prob": round(win_prob, 3), 
                         "session": f"Guru Engine ({interval})",
                         "rr": round(cfg['tp_atr'] / cfg['sl_atr'], 2),
                         "time_utc": now_utc.strftime("%Y-%m-%d %H:%M UTC"),
-                        "engine": engine_name
+                        "engine": f"{engine_name} + AI Filter"
                     }
                     
-                    print(f"  [GURU SIGNAL] {pair} {direction} | Bot: {engine_name}")
+                    print(f"  [GURU SIGNAL] {pair} {direction} | Bot: {engine_name} | AI Prob: {win_prob*100:.1f}%")
                     send_discord_alert(signal)
                     save_signal(signal)
                     time.sleep(1)
