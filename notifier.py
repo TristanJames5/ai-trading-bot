@@ -1,74 +1,47 @@
 """
-EMAIL NOTIFIER
-==============
-Sends signal alerts via Gmail SMTP.
-Setup: Create a Gmail App Password at:
-  myaccount.google.com > Security > 2-Step Verification > App Passwords
+DISCORD NOTIFIER
+=================
+Sends signal alerts instantly to your Discord server for free.
 """
 
-import smtplib
 import os
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 
-# ─────────────────────────────────────────
-# CONFIG — set these in your .env file
-# ─────────────────────────────────────────
-GMAIL_ADDRESS  = os.getenv("GMAIL_ADDRESS", "your@gmail.com")
-GMAIL_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "your_app_password")
-ALERT_TO       = os.getenv("ALERT_EMAIL", "your@gmail.com")   # Can be same or different
+def send_discord_alert(signal: dict):
+    DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "")
 
+    if not DISCORD_WEBHOOK_URL:
+        print("  Discord not configured — skipping alert.")
+        return
 
-def send_signal_email(signal: dict):
-    direction_arrow = "▲ LONG" if signal['direction'] == "LONG" else "▼ SHORT"
-    grade_emoji = {"A": "★★★", "B": "★★☆", "C": "★☆☆"}.get(signal['grade'], "")
+    color = 0x00FF00 if signal['direction'] == "LONG" else 0xFF0000
+    grade_emoji = {"A": "⭐️⭐️⭐️", "B": "⭐️⭐️", "C": "⭐️"}.get(signal['grade'], "")
 
-    subject = (
-        f"[{signal['grade']}] {signal['pair']} {direction_arrow} "
-        f"| {signal['session']}"
-    )
+    embed = {
+        "title": f"🤖 AI TRADING SIGNAL | {signal['pair']} {signal['direction']}",
+        "color": color,
+        "fields": [
+            {"name": "Direction", "value": signal['direction'], "inline": True},
+            {"name": "Grade", "value": f"{signal['grade']} {grade_emoji}", "inline": True},
+            {"name": "Session", "value": signal['session'], "inline": True},
+            {"name": "ENTRY", "value": f"```\n{signal['entry']}\n```", "inline": False},
+            {"name": "STOP LOSS", "value": f"```\n{signal['sl']}\n```", "inline": True},
+            {"name": "TAKE PROFIT", "value": f"```\n{signal['tp']}\n```", "inline": True},
+            {"name": "Risk:Reward", "value": f"1:{signal['rr']}", "inline": False},
+            {"name": "Engine Scores", "value": f"Rules Score: {signal['score']}/100\nML Win Prob: {signal['win_prob']*100:.1f}%", "inline": False}
+        ],
+        "footer": {"text": "Manage your risk. Only trade 1-2%."}
+    }
 
-    body = f"""
-AI TRADING SIGNAL ALERT
-{'='*45}
-
-Pair        : {signal['pair']}
-Direction   : {direction_arrow}
-Grade       : {signal['grade']} {grade_emoji}
-Session     : {signal['session']}
-Time (UTC)  : {signal['time_utc']}
-
-{'─'*45}
-ENTRY       : {signal['entry']}
-STOP LOSS   : {signal['sl']}
-TAKE PROFIT : {signal['tp']}
-R:R Ratio   : 1:{signal['rr']}
-{'─'*45}
-
-ENGINE SCORES:
-  v4.1 Rules Score : {signal['score']}/100
-  v5 ML Win Prob   : {signal['win_prob']*100:.1f}%
-  Both engines AGREE → Signal fired
-
-{'='*45}
-⚠️  Decision support only. Always manage your risk.
-    Only trade 1-2% risk per signal.
-{'='*45}
-"""
+    payload = {
+        "embeds": [embed]
+    }
 
     try:
-        msg = MIMEMultipart()
-        msg['From']    = GMAIL_ADDRESS
-        msg['To']      = ALERT_TO
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
-
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(GMAIL_ADDRESS, GMAIL_PASSWORD)
-            server.send_message(msg)
-
-        print(f"  Email sent to {ALERT_TO}")
-
+        response = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
+        if response.status_code in [200, 204]:
+            print("  [SUCCESS] Discord alert sent!")
+        else:
+            print(f"  [ERROR] Discord failed: {response.text}")
     except Exception as e:
-        print(f"  Email failed: {e}")
-        print(f"  Check GMAIL_ADDRESS and GMAIL_APP_PASSWORD in .env")
+        print(f"  [ERROR] Discord failed: {e}")

@@ -19,7 +19,7 @@ import pandas as pd
 import yfinance as yf
 import xgboost as xgb
 from datetime import datetime, timezone
-from notifier import send_signal_email
+from notifier import send_discord_alert
 from local_db import save_signal
 
 # ─────────────────────────────────────────
@@ -317,7 +317,7 @@ def scan_all_pairs():
             print(f"  TP:        {signal['tp']} (1:{signal['rr']} RRR)")
             print(f"  Session:   {signal['session']}")
 
-            send_signal_email(signal)
+            send_discord_alert(signal)
             save_signal(signal)
 
         except Exception as e:
