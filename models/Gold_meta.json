@@ -1,0 +1,28 @@
+{
+  "pair": "Gold",
+  "ticker": "GC=F",
+  "trained_on": "2026-09-27 11:48 UTC",
+  "train_acc": 0.7166,
+  "test_acc": 0.6464,
+  "overfit_gap": 0.0701,
+  "n_train": 5959,
+  "n_test": 2554,
+  "features": [
+    "Daily_Bias",
+    "Session",
+    "Zone_Pct",
+    "EMA_Dist",
+    "Price_SMA50",
+    "EMA_Cross",
+    "RSI_norm",
+    "FVG_Bull",
+    "FVG_Bear",
+    "OB_Bull",
+    "OB_Bear",
+    "Swept_High",
+    "Swept_Low"
+  ],
+  "sl_atr": 1.2,
+  "tp_atr": 3.0,
+  "status": "LIVE-READY"
+}

@@ -1,0 +1,104 @@
+//@version=5
+indicator("Advanced SMC & Price Action AI Bot", overlay=true, max_boxes_count=100)
+
+// ==============================================================================
+// 1. INPUTS & MODES
+// ==============================================================================
+grp_main = "Main Settings"
+trade_mode = input.string("Day Trade", options=["Scalp", "Day Trade", "Swing", "Positional"], title="Trading Mode", group=grp_main)
+webhook_url = input.string("http://YOUR_SERVER_IP:8000/webhook", title="Webhook URL", group=grp_main)
+passphrase = input.string("your_secure_passphrase_here", title="Webhook Passphrase", group=grp_main)
+
+grp_filters = "Filters & Toggles"
+use_fvg = input.bool(true, title="Detect Fair Value Gaps (FVG)?", group=grp_filters)
+use_ob = input.bool(true, title="Detect Order Blocks (OB)?", group=grp_filters)
+use_sessions = input.bool(true, title="Trade Only London & NY?", group=grp_filters)
+
+// ==============================================================================
+// 2. DYNAMIC LOOKBACKS BASED ON MODE
+// ==============================================================================
+// Adjust swing detection lengths based on the selected mode
+pivot_length = trade_mode == "Scalp" ? 5 : trade_mode == "Day Trade" ? 10 : trade_mode == "Swing" ? 21 : 50
+
+// ==============================================================================
+// 3. INDICATORS (9 & 21 EMA)
+// ==============================================================================
+ema9 = ta.ema(close, 9)
+ema21 = ta.ema(close, 21)
+plot(ema9, color=color.blue, title="EMA 9")
+plot(ema21, color=color.orange, title="EMA 21")
+
+// Trend based on EMA
+ema_bullish = ema9 > ema21
+ema_bearish = ema9 < ema21
+
+// ==============================================================================
+// 4. SESSION SESSIONS (LONDON & NY)
+// ==============================================================================
+// London roughly 07:00-16:00 UTC, NY roughly 13:00-22:00 UTC
+// Merged active window: 07:00 - 22:00 UTC
+session_time = input.session("0700-2200", title="London & NY Session", group=grp_filters)
+in_session = time(timeframe.period, session_time + ":1234567") // 1234567 allows all days
+is_active_session = use_sessions ? not na(in_session) : true
+
+bgcolor(is_active_session ? na : color.new(color.gray, 95), title="Out of Session")
+
+// ==============================================================================
+// 5. PREMIUM & DISCOUNT ZONES (LIQUIDITY)
+// ==============================================================================
+// Find recent swings
+swing_high = ta.pivothigh(high, pivot_length, pivot_length)
+swing_low = ta.pivotlow(low, pivot_length, pivot_length)
+
+var float last_sh = na
+var float last_sl = na
+
+if not na(swing_high)
+    last_sh := swing_high
+if not na(swing_low)
+    last_sl := swing_low
+
+// Equilibrium (Midpoint)
+equilibrium = (last_sh + last_sl) / 2
+
+// Price Position
+in_premium = close > equilibrium // Look for shorts
+in_discount = close < equilibrium // Look for longs
+
+// Plot Equilibrium line
+plot(equilibrium, color=color.gray, style=plot.style_cross, title="Equilibrium")
+
+// ==============================================================================
+// 6. ORDER BLOCKS & FVG
+// ==============================================================================
+// Simplified OB: Last opposite candle before a strong move
+bullish_ob = use_ob and close[2] < open[2] and close[1] > open[1] and close > high[1] and in_discount
+bearish_ob = use_ob and close[2] > open[2] and close[1] < open[1] and close < low[1] and in_premium
+
+// FVG Logic
+bullish_fvg = use_fvg and low > high[2]
+bearish_fvg = use_fvg and high < low[2]
+
+plotshape(bullish_ob, style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small, title="Bullish OB")
+plotshape(bearish_ob, style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small, title="Bearish OB")
+
+// ==============================================================================
+// 7. WEBHOOK ALERTS & JSON PAYLOAD
+// ==============================================================================
+// Fire alert if we are in session and an SMC event occurs
+alert_condition = is_active_session and (bullish_ob or bearish_ob or bullish_fvg or bearish_fvg)
+
+if alert_condition
+    json = '{'
+    json := json + '"passphrase": "' + passphrase + '",'
+    json := json + '"asset": "' + syminfo.ticker + '",'
+    json := json + '"mode": "' + trade_mode + '",'
+    json := json + '"price": ' + str.tostring(close) + ','
+    json := json + '"ema_trend": "' + (ema_bullish ? "Bullish" : "Bearish") + '",'
+    json := json + '"zone": "' + (in_premium ? "Premium" : in_discount ? "Discount" : "Equilibrium") + '",'
+    json := json + '"fvg_detected": ' + (bullish_fvg or bearish_fvg ? "true" : "false") + ','
+    json := json + '"ob_detected": ' + (bullish_ob or bearish_ob ? "true" : "false") + ','
+    json := json + '"request_bias": true'
+    json := json + '}'
+
+    alert(json, alert.freq_once_per_bar_close)
