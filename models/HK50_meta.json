@@ -1,12 +1,12 @@
 {
-  "pair": "NAS100",
-  "ticker": "NQ=F",
+  "pair": "HK50",
+  "ticker": "^HSI",
   "trained_on": "2026-09-27 13:59 UTC",
-  "train_acc": 0.7127,
-  "test_acc": 0.6601,
-  "overfit_gap": 0.0526,
-  "n_train": 6046,
-  "n_test": 2592,
+  "train_acc": 0.8501,
+  "test_acc": 0.571,
+  "overfit_gap": 0.2791,
+  "n_train": 1461,
+  "n_test": 627,
   "features": [
     "Daily_Bias",
     "Session",
@@ -24,5 +24,5 @@
   ],
   "sl_atr": 1.2,
   "tp_atr": 3.0,
-  "status": "LIVE-READY"
+  "status": "CAUTION"
 }

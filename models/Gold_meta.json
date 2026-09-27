@@ -1,7 +1,7 @@
 {
   "pair": "Gold",
   "ticker": "GC=F",
-  "trained_on": "2026-09-27 11:48 UTC",
+  "trained_on": "2026-09-27 13:59 UTC",
   "train_acc": 0.7166,
   "test_acc": 0.6464,
   "overfit_gap": 0.0701,

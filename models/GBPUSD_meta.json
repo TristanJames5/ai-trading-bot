@@ -1,7 +1,7 @@
 {
   "pair": "GBPUSD",
   "ticker": "GBPUSD=X",
-  "trained_on": "2026-09-27 11:48 UTC",
+  "trained_on": "2026-09-27 14:00 UTC",
   "train_acc": 0.727,
   "test_acc": 0.71,
   "overfit_gap": 0.017,
