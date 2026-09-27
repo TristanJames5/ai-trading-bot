@@ -25,6 +25,9 @@ jobs:
       - name: Train all pair models
         run: python train_v5.py
 
+      - name: Train PRO MAX (Swing) models
+        run: python train_swing.py
+
       - name: Commit updated models to GitHub
         run: |
           git config user.name "AI Trading Bot"
