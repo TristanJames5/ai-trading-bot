@@ -19,18 +19,41 @@ import pandas as pd
 import yfinance as yf
 import xgboost as xgb
 from datetime import datetime, timezone
-from notifier import send_discord_alert
-from local_db import save_signal
+from notifier import send_discord_alert, send_discord_result
+from local_db import save_signal, get_active_signals, log_trade_result
 
 # ─────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────
 PAIRS = {
+    # Indices
     "US30":   {"ticker": "YM=F",      "sl_atr": 1.2, "tp_atr": 3.0},
     "NAS100": {"ticker": "NQ=F",      "sl_atr": 1.2, "tp_atr": 3.0},
+    "US500":  {"ticker": "ES=F",      "sl_atr": 1.2, "tp_atr": 3.0},
+    "GER40":  {"ticker": "^GDAXI",    "sl_atr": 1.2, "tp_atr": 3.0},
+    "UK100":  {"ticker": "^FTSE",     "sl_atr": 1.2, "tp_atr": 3.0},
+    "HK50":   {"ticker": "^HSI",      "sl_atr": 1.2, "tp_atr": 3.0},
+    
+    # Commodities
     "Gold":   {"ticker": "GC=F",      "sl_atr": 1.5, "tp_atr": 3.0},
+    "Silver": {"ticker": "SI=F",      "sl_atr": 1.5, "tp_atr": 3.0},
+    "Oil":    {"ticker": "CL=F",      "sl_atr": 1.5, "tp_atr": 3.0},
+    "NatGas": {"ticker": "NG=F",      "sl_atr": 1.5, "tp_atr": 3.0},
+    "Copper": {"ticker": "HG=F",      "sl_atr": 1.5, "tp_atr": 3.0},
+    
+    # Crypto
+    "BTC":    {"ticker": "BTC-USD",   "sl_atr": 1.5, "tp_atr": 3.0},
+    "ETH":    {"ticker": "ETH-USD",   "sl_atr": 1.5, "tp_atr": 3.0},
+    "XRP":    {"ticker": "XRP-USD",   "sl_atr": 1.5, "tp_atr": 3.0},
+    "LTC":    {"ticker": "LTC-USD",   "sl_atr": 1.5, "tp_atr": 3.0},
+    
+    # Forex
     "EURUSD": {"ticker": "EURUSD=X",  "sl_atr": 1.0, "tp_atr": 2.5},
     "GBPUSD": {"ticker": "GBPUSD=X",  "sl_atr": 1.0, "tp_atr": 2.5},
+    "USDJPY": {"ticker": "JPY=X",     "sl_atr": 1.0, "tp_atr": 2.5},
+    "AUDUSD": {"ticker": "AUDUSD=X",  "sl_atr": 1.0, "tp_atr": 2.5},
+    "USDCAD": {"ticker": "CAD=X",     "sl_atr": 1.0, "tp_atr": 2.5},
+    "NZDUSD": {"ticker": "NZDUSD=X",  "sl_atr": 1.0, "tp_atr": 2.5},
 }
 
 MODELS_DIR      = "models"
@@ -240,6 +263,37 @@ def v41_score(row, bias):
 # ─────────────────────────────────────────
 fired_today = set()   # Prevent duplicate signals same candle
 
+def check_active_trades():
+    """Check open signals against current price to see if they hit TP or SL."""
+    active_signals = get_active_signals()
+    if not active_signals: return
+
+    for sig in active_signals:
+        pair = sig['pair']
+        if pair not in PAIRS: continue
+        ticker = PAIRS[pair]['ticker']
+        try:
+            df = yf.Ticker(ticker).history(period="1d", interval="5m")
+            if df.empty: continue
+            current_price = float(df['Close'].iloc[-1])
+            
+            if sig['direction'] == "LONG":
+                if current_price >= sig['tp']:
+                    log_trade_result(sig['id'], "WIN", sig['rr'], "Hit TP")
+                    send_discord_result(sig, "WIN", sig['rr'])
+                elif current_price <= sig['sl']:
+                    log_trade_result(sig['id'], "LOSS", -1.0, "Hit SL")
+                    send_discord_result(sig, "LOSS", -1.0)
+            elif sig['direction'] == "SHORT":
+                if current_price <= sig['tp']:
+                    log_trade_result(sig['id'], "WIN", sig['rr'], "Hit TP")
+                    send_discord_result(sig, "WIN", sig['rr'])
+                elif current_price >= sig['sl']:
+                    log_trade_result(sig['id'], "LOSS", -1.0, "Hit SL")
+                    send_discord_result(sig, "LOSS", -1.0)
+        except Exception as e:
+            print(f"  [ERROR] Trade tracker failed for {pair}: {e}")
+
 def scan_all_pairs():
     now_utc = datetime.now(timezone.utc)
     hour    = now_utc.hour
@@ -285,40 +339,62 @@ def scan_all_pairs():
             price  = float(row['Close'])
             atr    = float(row['ATR'])
             direction = "LONG" if bias == 1 else "SHORT"
-            sl = price - atr * cfg['sl_atr'] if bias == 1 else price + atr * cfg['sl_atr']
-            tp = price + atr * cfg['tp_atr'] if bias == 1 else price - atr * cfg['tp_atr']
+            sl_std = price - atr * cfg['sl_atr'] if bias == 1 else price + atr * cfg['sl_atr']
+            tp_std = price + atr * cfg['tp_atr'] if bias == 1 else price - atr * cfg['tp_atr']
+            
+            sl_max_atr = cfg['sl_atr'] * 0.4  # Extremely tight sniper stop
+            tp_max_atr = cfg['tp_atr'] * 1.5  # Stretched target
+            sl_max = price - atr * sl_max_atr if bias == 1 else price + atr * sl_max_atr
+            tp_max = price + atr * tp_max_atr if bias == 1 else price - atr * tp_max_atr
 
             signal_key = f"{pair}_{now_utc.strftime('%Y%m%d%H')}"
             if signal_key in fired_today:
                 continue
             fired_today.add(signal_key)
 
-            signal = {
+            signal_std = {
                 "pair":      pair,
                 "direction": direction,
                 "entry":     round(price, 5),
-                "sl":        round(sl, 5),
-                "tp":        round(tp, 5),
+                "sl":        round(sl_std, 5),
+                "tp":        round(tp_std, 5),
                 "grade":     grade,
                 "score":     score,
                 "win_prob":  round(win_prob, 3),
                 "session":   get_session_name(now_utc.hour),
                 "rr":        round(cfg['tp_atr'] / cfg['sl_atr'], 2),
-                "time_utc":  now_utc.strftime("%Y-%m-%d %H:%M UTC")
+                "time_utc":  now_utc.strftime("%Y-%m-%d %H:%M UTC"),
+                "engine":    "v4.1 + v5 (Standard)"
+            }
+
+            signal_max = {
+                "pair":      pair,
+                "direction": direction,
+                "entry":     round(price, 5),
+                "sl":        round(sl_max, 5),
+                "tp":        round(tp_max, 5),
+                "grade":     grade,
+                "score":     score,
+                "win_prob":  round(win_prob, 3),
+                "session":   get_session_name(now_utc.hour),
+                "rr":        round(tp_max_atr / sl_max_atr, 2),
+                "time_utc":  now_utc.strftime("%Y-%m-%d %H:%M UTC"),
+                "engine":    "v4.1 MAX + v5 MAX (Sniper)"
             }
 
             print(f"\n  *** SIGNAL FIRED ***")
-            print(f"  Pair:      {signal['pair']}")
-            print(f"  Direction: {signal['direction']}")
-            print(f"  Grade:     {signal['grade']} (score {signal['score']})")
-            print(f"  Win Prob:  {signal['win_prob']*100:.1f}% (v5 ML)")
-            print(f"  Entry:     {signal['entry']}")
-            print(f"  SL:        {signal['sl']}")
-            print(f"  TP:        {signal['tp']} (1:{signal['rr']} RRR)")
-            print(f"  Session:   {signal['session']}")
+            print(f"  Pair:      {signal_std['pair']} ({signal_std['direction']})")
+            print(f"  Win Prob:  {signal_std['win_prob']*100:.1f}%")
+            print(f"  Entry:     {signal_std['entry']}")
+            print(f"  [STD] SL:  {signal_std['sl']} | TP: {signal_std['tp']} (1:{signal_std['rr']})")
+            print(f"  [MAX] SL:  {signal_max['sl']} | TP: {signal_max['tp']} (1:{signal_max['rr']})")
 
-            send_discord_alert(signal)
-            save_signal(signal)
+            send_discord_alert(signal_std)
+            save_signal(signal_std)
+            import time
+            time.sleep(1) # Prevent discord rate limit
+            send_discord_alert(signal_max)
+            save_signal(signal_max)
 
         except Exception as e:
             print(f"    {pair}: Error — {e}")
@@ -338,6 +414,7 @@ if __name__ == "__main__":
 
     while True:
         try:
+            check_active_trades()
             scan_all_pairs()
         except KeyboardInterrupt:
             print("\nEngine stopped by user.")

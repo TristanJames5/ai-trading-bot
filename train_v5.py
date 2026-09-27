@@ -21,11 +21,34 @@ import xgboost as xgb
 # CONFIG
 # ─────────────────────────────────────────
 PAIRS = {
+    # Indices
     "US30":   "YM=F",
     "NAS100": "NQ=F",
+    "US500":  "ES=F",
+    "GER40":  "^GDAXI",
+    "UK100":  "^FTSE",
+    "HK50":   "^HSI",
+    
+    # Commodities
     "Gold":   "GC=F",
+    "Silver": "SI=F",
+    "Oil":    "CL=F",
+    "NatGas": "NG=F",
+    "Copper": "HG=F",
+    
+    # Crypto
+    "BTC":    "BTC-USD",
+    "ETH":    "ETH-USD",
+    "XRP":    "XRP-USD",
+    "LTC":    "LTC-USD",
+    
+    # Forex
     "EURUSD": "EURUSD=X",
     "GBPUSD": "GBPUSD=X",
+    "USDJPY": "JPY=X",
+    "AUDUSD": "AUDUSD=X",
+    "USDCAD": "CAD=X",
+    "NZDUSD": "NZDUSD=X",
 }
 
 SL_ATR = 1.2

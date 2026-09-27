@@ -104,3 +104,24 @@ def log_trade_result(signal_id: int, result: str, pnl_r: float, notes: str = "")
 
     except Exception as e:
         print(f"  Journal save failed: {e}")
+
+def get_active_signals():
+    """Fetch signals that have not been logged in trade_journal yet."""
+    try:
+        init_db()
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        
+        c.execute('''
+            SELECT s.* FROM signals s
+            LEFT JOIN trade_journal tj ON s.id = tj.signal_id
+            WHERE tj.id IS NULL
+        ''')
+        
+        rows = c.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        print(f"  Failed to fetch active signals: {e}")
+        return []
