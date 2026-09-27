@@ -1,5 +1,7 @@
 from notifier import send_discord_alert
 from datetime import datetime, timezone
+from dotenv import load_dotenv
+load_dotenv()
 
 now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
