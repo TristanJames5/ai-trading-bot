@@ -6,6 +6,8 @@ Sends signal alerts instantly to your Discord server for free.
 
 import os
 import requests
+from dotenv import load_dotenv
+load_dotenv()
 
 def send_discord_alert(signal: dict):
     DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "")

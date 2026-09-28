@@ -41,7 +41,8 @@ def build_swing_features(df, df_1wk):
     df.index = pd.to_datetime(df.index).normalize().tz_localize(None)
     
     # Map Weekly Bias to Daily
-    df['Weekly_Bias'] = df.index.map(df_1wk_bias['Bias_W'].to_dict()).ffill().fillna(0)
+    mapped_bias = pd.Series(df.index.map(df_1wk_bias['Bias_W'].to_dict()))
+    df['Weekly_Bias'] = mapped_bias.ffill().fillna(0).values
 
     # ATR
     tr = np.maximum(df['High'] - df['Low'],
