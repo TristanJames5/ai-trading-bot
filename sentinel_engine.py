@@ -28,6 +28,7 @@ load_dotenv()
 # Internal modules
 from notifier import send_discord_alert, send_discord_result
 from local_db import save_signal, get_active_signals, log_trade_result
+from mt5_broker import open_trade as mt5_open_trade, close_trade as mt5_close_trade
 
 # ─────────────────────────────────────────
 # CONFIG
@@ -290,6 +291,7 @@ def scan_all_pairs():
             
             if action == 7 and position_flag != 0 and open_trade:
                 print(f"    🚨 SENTINEL COMMANDS EARLY CLOSE on {pair}!")
+                mt5_close_trade(pair, open_trade['direction'])
                 result = "WIN" if unrealized_pnl > 0 else "LOSS"
                 # Roughly estimate RR closed early
                 pseudo_rr = round(unrealized_pnl / 1.0, 2) if unrealized_pnl > 0 else -1.0 
@@ -334,6 +336,12 @@ def scan_all_pairs():
 
                 send_discord_alert(signal_data)
                 save_signal(signal_data)
+                
+                if signal_data['win_prob'] >= 0.75:
+                    mt5_open_trade(pair, direction, risk_level, sl_std, tp_std)
+                    print(f"  [MT5] 🎯 High Probability ({signal_data['win_prob']*100}%) -> Executing on FundedNext")
+                else:
+                    print(f"  [MT5] ⚠️ Skipping Execution: Probability ({signal_data['win_prob']*100}%) is below 75% threshold")
                 
         except Exception as e:
             print(f"    {pair}: Error — {e}")
