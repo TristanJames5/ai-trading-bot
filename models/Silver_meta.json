@@ -1,12 +1,12 @@
 {
   "pair": "Silver",
   "ticker": "SI=F",
-  "trained_on": "2026-09-27 14:00 UTC",
-  "train_acc": 0.7281,
-  "test_acc": 0.676,
-  "overfit_gap": 0.0521,
-  "n_train": 5903,
-  "n_test": 2531,
+  "trained_on": "2026-09-29 22:58 UTC",
+  "train_acc": 0.7294,
+  "test_acc": 0.6869,
+  "overfit_gap": 0.0426,
+  "n_train": 6191,
+  "n_test": 2654,
   "features": [
     "Daily_Bias",
     "Session",

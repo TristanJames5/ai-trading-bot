@@ -1,12 +1,12 @@
 {
   "pair": "US30",
   "ticker": "YM=F",
-  "trained_on": "2026-09-27 13:59 UTC",
-  "train_acc": 0.7296,
-  "test_acc": 0.6785,
-  "overfit_gap": 0.0511,
-  "n_train": 6162,
-  "n_test": 2641,
+  "trained_on": "2026-09-29 22:57 UTC",
+  "train_acc": 0.7253,
+  "test_acc": 0.6869,
+  "overfit_gap": 0.0384,
+  "n_train": 6490,
+  "n_test": 2782,
   "features": [
     "Daily_Bias",
     "Session",

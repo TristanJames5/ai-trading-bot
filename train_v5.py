@@ -121,7 +121,11 @@ def build_features(df, df_1d):
         np.where((df_1d['EMA9d'] < df_1d['EMA21d']) & (df_1d['Close'] < df_1d['SMA50d']), -1, 0)
     )
     df_1d_bias = df_1d[['Bias']].copy()
-    df_1d_bias.index = pd.to_datetime(df_1d_bias.index).normalize().tz_localize(None)
+    
+    # CRITICAL FIX: Shift the Daily Bias by 1 to prevent "Lookahead Bias" 
+    df_1d_bias['Bias'] = df_1d_bias['Bias'].shift(1)
+    df_1d_bias.index = pd.to_datetime(df_1d_bias.index).normalize()
+    
     df['Daily_Bias'] = df.index.normalize().map(df_1d_bias['Bias'].to_dict())
     df['Daily_Bias'] = df['Daily_Bias'].ffill().fillna(0)
 
@@ -197,8 +201,9 @@ def train_pair(pair_name, ticker):
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
 
-    df_1h.index = pd.to_datetime(df_1h.index).tz_localize(None)
-    df_1d.index = pd.to_datetime(df_1d.index).tz_localize(None)
+    # Convert everything to UTC to fix timezone mismatch across Forex/Crypto/Indices
+    df_1h.index = pd.to_datetime(df_1h.index, utc=True)
+    df_1d.index = pd.to_datetime(df_1d.index, utc=True)
 
     print(f"  Building features...")
     df_feat = build_features(df_1h, df_1d)

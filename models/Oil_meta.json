@@ -1,12 +1,12 @@
 {
   "pair": "Oil",
   "ticker": "CL=F",
-  "trained_on": "2026-09-27 14:00 UTC",
-  "train_acc": 0.7225,
-  "test_acc": 0.6727,
-  "overfit_gap": 0.0497,
-  "n_train": 5895,
-  "n_test": 2527,
+  "trained_on": "2026-09-29 22:58 UTC",
+  "train_acc": 0.7343,
+  "test_acc": 0.7017,
+  "overfit_gap": 0.0326,
+  "n_train": 6202,
+  "n_test": 2658,
   "features": [
     "Daily_Bias",
     "Session",

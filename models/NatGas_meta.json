@@ -1,12 +1,12 @@
 {
   "pair": "NatGas",
   "ticker": "NG=F",
-  "trained_on": "2026-09-27 14:00 UTC",
-  "train_acc": 0.7215,
-  "test_acc": 0.6908,
-  "overfit_gap": 0.0307,
-  "n_train": 5698,
-  "n_test": 2442,
+  "trained_on": "2026-09-29 22:59 UTC",
+  "train_acc": 0.7427,
+  "test_acc": 0.7069,
+  "overfit_gap": 0.0358,
+  "n_train": 6009,
+  "n_test": 2576,
   "features": [
     "Daily_Bias",
     "Session",

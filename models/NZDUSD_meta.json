@@ -1,12 +1,12 @@
 {
   "pair": "NZDUSD",
   "ticker": "NZDUSD=X",
-  "trained_on": "2026-09-27 14:01 UTC",
-  "train_acc": 0.7336,
-  "test_acc": 0.6762,
-  "overfit_gap": 0.0574,
-  "n_train": 5649,
-  "n_test": 2421,
+  "trained_on": "2026-09-29 23:04 UTC",
+  "train_acc": 0.7212,
+  "test_acc": 0.6973,
+  "overfit_gap": 0.0238,
+  "n_train": 6366,
+  "n_test": 2729,
   "features": [
     "Daily_Bias",
     "Session",

@@ -1,12 +1,12 @@
 {
   "pair": "US500",
   "ticker": "ES=F",
-  "trained_on": "2026-09-27 13:59 UTC",
-  "train_acc": 0.7255,
-  "test_acc": 0.6687,
-  "overfit_gap": 0.0568,
-  "n_train": 6099,
-  "n_test": 2614,
+  "trained_on": "2026-09-29 22:57 UTC",
+  "train_acc": 0.7208,
+  "test_acc": 0.7003,
+  "overfit_gap": 0.0205,
+  "n_train": 6383,
+  "n_test": 2736,
   "features": [
     "Daily_Bias",
     "Session",

@@ -1,12 +1,12 @@
 {
   "pair": "EURUSD",
   "ticker": "EURUSD=X",
-  "trained_on": "2026-09-27 14:00 UTC",
-  "train_acc": 0.7417,
-  "test_acc": 0.6696,
-  "overfit_gap": 0.0722,
-  "n_train": 5653,
-  "n_test": 2424,
+  "trained_on": "2026-09-29 23:03 UTC",
+  "train_acc": 0.7369,
+  "test_acc": 0.6761,
+  "overfit_gap": 0.0607,
+  "n_train": 6491,
+  "n_test": 2782,
   "features": [
     "Daily_Bias",
     "Session",

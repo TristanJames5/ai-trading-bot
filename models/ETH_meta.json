@@ -1,12 +1,12 @@
 {
   "pair": "ETH",
   "ticker": "ETH-USD",
-  "trained_on": "2026-09-27 14:00 UTC",
-  "train_acc": 0.6941,
-  "test_acc": 0.6555,
-  "overfit_gap": 0.0386,
-  "n_train": 10511,
-  "n_test": 4505,
+  "trained_on": "2026-09-29 23:01 UTC",
+  "train_acc": 0.7036,
+  "test_acc": 0.6699,
+  "overfit_gap": 0.0338,
+  "n_train": 10500,
+  "n_test": 4501,
   "features": [
     "Daily_Bias",
     "Session",

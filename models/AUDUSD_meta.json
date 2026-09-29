@@ -1,12 +1,12 @@
 {
   "pair": "AUDUSD",
   "ticker": "AUDUSD=X",
-  "trained_on": "2026-09-27 14:01 UTC",
-  "train_acc": 0.7322,
-  "test_acc": 0.6757,
-  "overfit_gap": 0.0564,
-  "n_train": 5481,
-  "n_test": 2350,
+  "trained_on": "2026-09-29 23:03 UTC",
+  "train_acc": 0.7356,
+  "test_acc": 0.6852,
+  "overfit_gap": 0.0504,
+  "n_train": 6173,
+  "n_test": 2646,
   "features": [
     "Daily_Bias",
     "Session",

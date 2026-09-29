@@ -1,12 +1,12 @@
 {
   "pair": "XRP",
   "ticker": "XRP-USD",
-  "trained_on": "2026-09-27 14:00 UTC",
-  "train_acc": 0.6831,
-  "test_acc": 0.6657,
-  "overfit_gap": 0.0174,
-  "n_train": 10315,
-  "n_test": 4421,
+  "trained_on": "2026-09-29 23:01 UTC",
+  "train_acc": 0.7001,
+  "test_acc": 0.7,
+  "overfit_gap": 0.0001,
+  "n_train": 10311,
+  "n_test": 4420,
   "features": [
     "Daily_Bias",
     "Session",

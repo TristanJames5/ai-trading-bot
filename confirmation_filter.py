@@ -29,8 +29,22 @@ def check_ltf_confirmation(ticker, direction, interval="15m", period="3d"):
         prev_high = highs.iloc[-2]
         current_price = df['Close'].iloc[-1]
 
-        # 3. Check for Confirmation
+        # 3. Calculate Immediate Momentum (Anti-Dump Protection)
+        df['ATR'] = (df['High'] - df['Low']).rolling(14).mean()
+        atr = df['ATR'].iloc[-1]
+        
+        last_open = df['Open'].iloc[-2]
+        last_close = df['Close'].iloc[-2]
+        curr_open = df['Open'].iloc[-1]
+        
+        # 4. Check for Confirmation
         if direction == "LONG":
+            # Immediate Falling Knife Check: Is the market plunging right now?
+            # If the last closed candle or the current candle is a massive red drop (> 80% of ATR)
+            is_dumping = (last_open - last_close) > (atr * 0.8) or (curr_open - current_price) > (atr * 0.8)
+            if is_dumping:
+                return False, "Falling Knife: Heavy bearish momentum plunging right now"
+                
             # We want to see a ChoCh (Change of Character) -> Breaking the previous swing high
             # AND a retest (Higher Low)
             
@@ -53,6 +67,11 @@ def check_ltf_confirmation(ticker, direction, interval="15m", period="3d"):
             return True, "LTF Confirmed: Break & Retest Up"
 
         elif direction == "SHORT":
+            # Immediate Rocket Check: Is the market skyrocketing right now?
+            is_rocketing = (last_close - last_open) > (atr * 0.8) or (current_price - curr_open) > (atr * 0.8)
+            if is_rocketing:
+                return False, "Catching Rockets: Heavy bullish momentum rocketing right now"
+                
             # We want to see a ChoCh -> Breaking the previous swing low
             # AND a retest (Lower High)
             

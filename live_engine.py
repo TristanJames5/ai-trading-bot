@@ -21,7 +21,7 @@ import xgboost as xgb
 from datetime import datetime, timezone
 from notifier import send_discord_alert, send_discord_result
 from local_db import save_signal, get_active_signals, log_trade_result
-from mt5_broker import open_trade
+from mt5_broker import open_trade, move_sl_to_be
 from confirmation_filter import check_ltf_confirmation
 
 # ─────────────────────────────────────────
@@ -123,9 +123,10 @@ def get_session_name(hour):
 def get_features(pair, cfg):
     ticker = cfg['ticker']
     try:
-        df_1h = yf.download(ticker, period="60d", interval="1h",
+        # Optimization: Use 10d and 80d to prevent Yahoo Finance ban while maintaining enough data for SMA50
+        df_1h = yf.download(ticker, period="10d", interval="1h",
                             progress=False, auto_adjust=True)
-        df_1d = yf.download(ticker, period="180d", interval="1d",
+        df_1d = yf.download(ticker, period="80d", interval="1d",
                             progress=False, auto_adjust=True)
     except Exception as e:
         return None, None
@@ -135,8 +136,9 @@ def get_features(pair, cfg):
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
 
-    df_1h.index = pd.to_datetime(df_1h.index).tz_localize(None)
-    df_1d.index = pd.to_datetime(df_1d.index).tz_localize(None)
+    # Convert everything to UTC to fix timezone mismatch across Forex/Crypto/Indices
+    df_1h.index = pd.to_datetime(df_1h.index, utc=True)
+    df_1d.index = pd.to_datetime(df_1d.index, utc=True)
 
     # Indicators
     df_1h['EMA9']  = df_1h['Close'].ewm(span=9).mean()
@@ -179,7 +181,12 @@ def get_features(pair, cfg):
         np.where((df_1d['EMA9d'] < df_1d['EMA21d']) & (df_1d['Close'] < df_1d['SMA50d']), -1, 0)
     )
     df_1d_bias = df_1d[['Bias']].copy()
-    df_1d_bias.index = pd.to_datetime(df_1d_bias.index).normalize().tz_localize(None)
+    
+    # CRITICAL FIX: Shift the Daily Bias by 1 to prevent "Lookahead Bias" 
+    # (So intraday trades rely on yesterday's closed candle, not today's unclosed candle)
+    df_1d_bias['Bias'] = df_1d_bias['Bias'].shift(1)
+    df_1d_bias.index = pd.to_datetime(df_1d_bias.index).normalize()
+    
     df_1h['Daily_Bias'] = df_1h.index.normalize().map(df_1d_bias['Bias'].to_dict())
     df_1h['Daily_Bias'] = df_1h['Daily_Bias'].ffill().fillna(0)
 
@@ -280,13 +287,24 @@ def check_active_trades():
             current_price = float(df['Close'].iloc[-1])
             
             if sig['direction'] == "LONG":
+                # Check for Break-Even at 1.0R
+                risk_distance = sig['entry'] - sig['sl']
+                if current_price >= sig['entry'] + risk_distance:
+                    move_sl_to_be(pair, sig['entry'])
+                    
                 if current_price >= sig['tp']:
                     log_trade_result(sig['id'], "WIN", sig['rr'], "Hit TP")
                     send_discord_result(sig, "WIN", sig['rr'])
                 elif current_price <= sig['sl']:
                     log_trade_result(sig['id'], "LOSS", -1.0, "Hit SL")
                     send_discord_result(sig, "LOSS", -1.0)
+                    
             elif sig['direction'] == "SHORT":
+                # Check for Break-Even at 1.0R
+                risk_distance = sig['sl'] - sig['entry']
+                if current_price <= sig['entry'] - risk_distance:
+                    move_sl_to_be(pair, sig['entry'])
+                    
                 if current_price <= sig['tp']:
                     log_trade_result(sig['id'], "WIN", sig['rr'], "Hit TP")
                     send_discord_result(sig, "WIN", sig['rr'])

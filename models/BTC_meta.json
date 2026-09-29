@@ -1,12 +1,12 @@
 {
   "pair": "BTC",
   "ticker": "BTC-USD",
-  "trained_on": "2026-09-27 14:00 UTC",
-  "train_acc": 0.6862,
-  "test_acc": 0.6582,
-  "overfit_gap": 0.028,
-  "n_train": 9986,
-  "n_test": 4280,
+  "trained_on": "2026-09-29 23:00 UTC",
+  "train_acc": 0.7014,
+  "test_acc": 0.6899,
+  "overfit_gap": 0.0115,
+  "n_train": 9983,
+  "n_test": 4279,
   "features": [
     "Daily_Bias",
     "Session",

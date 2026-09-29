@@ -1,12 +1,12 @@
 {
   "pair": "LTC",
   "ticker": "LTC-USD",
-  "trained_on": "2026-09-27 14:00 UTC",
-  "train_acc": 0.7108,
-  "test_acc": 0.661,
-  "overfit_gap": 0.0498,
-  "n_train": 10012,
-  "n_test": 4292,
+  "trained_on": "2026-09-29 23:02 UTC",
+  "train_acc": 0.7356,
+  "test_acc": 0.7056,
+  "overfit_gap": 0.03,
+  "n_train": 10015,
+  "n_test": 4293,
   "features": [
     "Daily_Bias",
     "Session",

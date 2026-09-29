@@ -1,12 +1,12 @@
 {
   "pair": "Gold",
   "ticker": "GC=F",
-  "trained_on": "2026-09-27 13:59 UTC",
-  "train_acc": 0.7166,
-  "test_acc": 0.6464,
-  "overfit_gap": 0.0701,
-  "n_train": 5959,
-  "n_test": 2554,
+  "trained_on": "2026-09-29 22:58 UTC",
+  "train_acc": 0.7172,
+  "test_acc": 0.6792,
+  "overfit_gap": 0.0381,
+  "n_train": 6274,
+  "n_test": 2690,
   "features": [
     "Daily_Bias",
     "Session",

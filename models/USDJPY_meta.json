@@ -1,12 +1,12 @@
 {
   "pair": "USDJPY",
   "ticker": "JPY=X",
-  "trained_on": "2026-09-27 14:01 UTC",
-  "train_acc": 0.7381,
-  "test_acc": 0.714,
-  "overfit_gap": 0.0241,
-  "n_train": 5537,
-  "n_test": 2374,
+  "trained_on": "2026-09-29 23:03 UTC",
+  "train_acc": 0.7283,
+  "test_acc": 0.7186,
+  "overfit_gap": 0.0097,
+  "n_train": 6275,
+  "n_test": 2690,
   "features": [
     "Daily_Bias",
     "Session",

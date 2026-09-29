@@ -1,12 +1,12 @@
 {
   "pair": "Copper",
   "ticker": "HG=F",
-  "trained_on": "2026-09-27 14:00 UTC",
-  "train_acc": 0.7226,
-  "test_acc": 0.7151,
-  "overfit_gap": 0.0075,
-  "n_train": 5911,
-  "n_test": 2534,
+  "trained_on": "2026-09-29 22:59 UTC",
+  "train_acc": 0.7194,
+  "test_acc": 0.7241,
+  "overfit_gap": -0.0047,
+  "n_train": 6223,
+  "n_test": 2668,
   "features": [
     "Daily_Bias",
     "Session",

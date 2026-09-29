@@ -1,12 +1,12 @@
 {
   "pair": "HK50",
   "ticker": "^HSI",
-  "trained_on": "2026-09-27 13:59 UTC",
-  "train_acc": 0.8501,
-  "test_acc": 0.571,
-  "overfit_gap": 0.2791,
-  "n_train": 1461,
-  "n_test": 627,
+  "trained_on": "2026-09-29 22:58 UTC",
+  "train_acc": 0.8532,
+  "test_acc": 0.5843,
+  "overfit_gap": 0.2689,
+  "n_train": 1451,
+  "n_test": 623,
   "features": [
     "Daily_Bias",
     "Session",

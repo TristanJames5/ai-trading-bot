@@ -1,12 +1,12 @@
 {
   "pair": "GER40",
   "ticker": "^GDAXI",
-  "trained_on": "2026-09-27 13:59 UTC",
-  "train_acc": 0.7599,
-  "test_acc": 0.6477,
-  "overfit_gap": 0.1122,
-  "n_train": 2045,
-  "n_test": 877,
+  "trained_on": "2026-09-29 22:57 UTC",
+  "train_acc": 0.7653,
+  "test_acc": 0.6897,
+  "overfit_gap": 0.0756,
+  "n_train": 2028,
+  "n_test": 870,
   "features": [
     "Daily_Bias",
     "Session",

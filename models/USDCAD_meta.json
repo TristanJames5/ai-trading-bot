@@ -1,12 +1,12 @@
 {
   "pair": "USDCAD",
   "ticker": "CAD=X",
-  "trained_on": "2026-09-27 14:01 UTC",
-  "train_acc": 0.7213,
-  "test_acc": 0.7069,
-  "overfit_gap": 0.0143,
-  "n_train": 5618,
-  "n_test": 2409,
+  "trained_on": "2026-09-29 23:04 UTC",
+  "train_acc": 0.7318,
+  "test_acc": 0.7112,
+  "overfit_gap": 0.0206,
+  "n_train": 6316,
+  "n_test": 2708,
   "features": [
     "Daily_Bias",
     "Session",
