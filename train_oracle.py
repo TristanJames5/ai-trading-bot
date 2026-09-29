@@ -125,8 +125,9 @@ def train_oracle_pair(pair_name, ticker):
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-    print(f"  Initializing PyTorch Transformer (Device: {torch.device('cuda' if torch.cuda.is_available() else 'cpu')})...")
-    model = OracleTransformer(feature_dim=len(FEATURE_COLS), hidden_dim=64, num_classes=3)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"  Initializing PyTorch Transformer (Device: {device})...")
+    model = OracleTransformer(feature_dim=len(FEATURE_COLS), hidden_dim=64, num_classes=3).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -135,6 +136,7 @@ def train_oracle_pair(pair_name, ticker):
         model.train()
         total_loss = 0
         for batch_x, batch_y in train_loader:
+            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
             optimizer.zero_grad()
             outputs = model(batch_x)
             loss = criterion(outputs, batch_y)
@@ -148,6 +150,7 @@ def train_oracle_pair(pair_name, ticker):
     total = 0
     with torch.no_grad():
         for batch_x, batch_y in test_loader:
+            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
             outputs = model(batch_x)
             _, predicted = torch.max(outputs.data, 1)
             total += batch_y.size(0)
