@@ -334,14 +334,14 @@ def scan_all_pairs():
                 print(f"  Entry:     {signal_data['entry']}")
                 print(f"  SL:        {signal_data['sl']} | TP: {signal_data['tp']} (1:{signal_data['rr']})")
 
-                send_discord_alert(signal_data)
                 save_signal(signal_data)
                 
                 if signal_data['win_prob'] >= 0.75:
+                    send_discord_alert(signal_data)
                     mt5_open_trade(pair, direction, risk_level, sl_std, tp_std)
                     print(f"  [MT5] 🎯 High Probability ({signal_data['win_prob']*100}%) -> Executing on FundedNext")
                 else:
-                    print(f"  [MT5] ⚠️ Skipping Execution: Probability ({signal_data['win_prob']*100}%) is below 75% threshold")
+                    print(f"  [DISCORD/MT5] ⚠️ Skipping Execution: Probability ({signal_data['win_prob']*100}%) is below 75% threshold")
                 
         except Exception as e:
             print(f"    {pair}: Error — {e}")

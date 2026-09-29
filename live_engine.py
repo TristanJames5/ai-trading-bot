@@ -59,7 +59,7 @@ PAIRS = {
 
 MODELS_DIR      = "models"
 V41_SCORE_MIN   = 55     # v4.1 minimum score to pass
-V5_PROB_MIN     = 0.52   # v5 minimum win probability to pass
+V5_PROB_MIN     = 0.75   # v5 minimum win probability to pass
 SCAN_INTERVAL   = 300    # seconds between scans (5 min)
 GRADE_A_CUTOFF  = 75     # Suppress Grade A (paradox fix from v4)
 KILL_ZONES_UTC  = [(0, 24)]  # Unleashed for live testing
