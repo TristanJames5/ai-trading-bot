@@ -29,6 +29,7 @@ load_dotenv()
 from notifier import send_discord_alert, send_discord_result
 from local_db import save_signal, get_active_signals, log_trade_result
 from mt5_broker import open_trade as mt5_open_trade, close_trade as mt5_close_trade
+from confirmation_filter import check_ltf_confirmation
 
 # ─────────────────────────────────────────
 # CONFIG
@@ -311,6 +312,16 @@ def scan_all_pairs():
 
                 # Sentinel wants to enter a new trade
                 direction = "LONG" if action in [1, 2, 3] else "SHORT"
+                
+                # --- 🛡️ MULTI-TIMEFRAME CONFIRMATION FILTER ---
+                ticker_sym = cfg['ticker']
+                is_confirmed, reason = check_ltf_confirmation(ticker_sym, direction)
+                if not is_confirmed:
+                    print(f"    🚨 VETO (Falling Knife Protection): Skipping {direction} on {pair} - {reason}")
+                    continue
+                else:
+                    print(f"    ✅ LTF CONFIRMED: {reason}")
+                    
                 risk_level = {1: "Light (1%)", 2: "Normal (5%)", 3: "MAX (10%)",
                               4: "Light (1%)", 5: "Normal (5%)", 6: "MAX (10%)"}[action]
                               

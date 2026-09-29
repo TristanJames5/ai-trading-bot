@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 from notifier import send_discord_alert, send_discord_result
 from local_db import save_signal, get_active_signals, log_trade_result
 from mt5_broker import open_trade
+from confirmation_filter import check_ltf_confirmation
 
 # ─────────────────────────────────────────
 # CONFIG
@@ -340,6 +341,16 @@ def scan_all_pairs():
             price  = float(row['Close'])
             atr    = float(row['ATR'])
             direction = "LONG" if bias == 1 else "SHORT"
+            
+            # --- 🛡️ MULTI-TIMEFRAME CONFIRMATION FILTER ---
+            ticker_sym = cfg['ticker']
+            is_confirmed, reason = check_ltf_confirmation(ticker_sym, direction)
+            if not is_confirmed:
+                print(f"    🚨 VETO (Falling Knife Protection): Skipping {direction} on {pair} - {reason}")
+                continue
+            else:
+                print(f"    ✅ LTF CONFIRMED: {reason}")
+                
             sl_std = price - atr * cfg['sl_atr'] if bias == 1 else price + atr * cfg['sl_atr']
             tp_std = price + atr * cfg['tp_atr'] if bias == 1 else price - atr * cfg['tp_atr']
             
