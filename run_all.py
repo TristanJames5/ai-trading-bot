@@ -1,35 +1,6 @@
 import subprocess
 import sys
 import time
-import schedule
-import threading
-
-def weekend_workout():
-    print("========================================")
-    print("🧠 INITIATING WEEKEND ML WORKOUT 🧠")
-    print("========================================")
-    print("The markets are closed. Training engines on the latest data...")
-    
-    try:
-        # Run Sentinel Training
-        print("-> Retraining Sentinel Engine (v5)...")
-        subprocess.run([sys.executable, "train_v5.py"])
-        
-        # Run Guru Training
-        print("-> Retraining Guru Engine...")
-        subprocess.run([sys.executable, "train_guru.py"])
-        
-        print("✅ Weekend Workout Complete! Models have been permanently upgraded.")
-    except Exception as e:
-        print(f"❌ Workout failed: {e}")
-
-def scheduler_thread():
-    # Schedule the workout for Saturday at 2:00 AM
-    schedule.every().saturday.at("02:00").do(weekend_workout)
-    
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
 
 def run_all_bots():
     print("========================================")
@@ -57,13 +28,7 @@ def run_all_bots():
     print("-> Starting Trinity Discord Bot (discord_bot.py)...")
     trinity_bot = subprocess.Popen([sys.executable, "discord_bot.py"])
     
-    # Start the Continuous Learning Scheduler
-    print("-> Starting Continuous Learning Scheduler (Saturdays @ 2AM)...")
-    trainer_thread = threading.Thread(target=scheduler_thread, daemon=True)
-    trainer_thread.start()
-    
     print("\n✅ All 4 bots (Standard, Sentinel, Guru, and Trinity) are now running simultaneously!")
-    print("✅ Continuous Learning is ACTIVE.")
     print("Press Ctrl+C at any time to stop them all.\n")
     
     try:
