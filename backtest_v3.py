@@ -27,7 +27,7 @@ SCORE_B  = 50
 SL_ATR   = 1.2
 TP1_ATR  = 1.2   # Partial TP at 1:1 (half position)
 TP2_ATR  = 4.0   # Full TP at 1:3.3 (remaining half)
-KILL_ZONES = [(7, 9), (13, 16)]
+KILL_ZONES = [(0, 24)]  # Unleashed: 24/7 Trading
 
 
 # ─────────────────────────────────────────

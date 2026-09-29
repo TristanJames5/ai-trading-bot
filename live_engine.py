@@ -21,6 +21,7 @@ import xgboost as xgb
 from datetime import datetime, timezone
 from notifier import send_discord_alert, send_discord_result
 from local_db import save_signal, get_active_signals, log_trade_result
+from mt5_broker import open_trade
 
 # ─────────────────────────────────────────
 # CONFIG
@@ -61,7 +62,7 @@ V41_SCORE_MIN   = 55     # v4.1 minimum score to pass
 V5_PROB_MIN     = 0.52   # v5 minimum win probability to pass
 SCAN_INTERVAL   = 300    # seconds between scans (5 min)
 GRADE_A_CUTOFF  = 75     # Suppress Grade A (paradox fix from v4)
-KILL_ZONES_UTC  = [(7, 9), (13, 16)]  # London & NY
+KILL_ZONES_UTC  = [(0, 24)]  # Unleashed for live testing
 
 FEATURE_COLS = [
     'Daily_Bias', 'Session', 'Zone_Pct', 'EMA_Dist',
@@ -395,6 +396,15 @@ def scan_all_pairs():
             time.sleep(1) # Prevent discord rate limit
             send_discord_alert(signal_max)
             save_signal(signal_max)
+            
+            # --- AUTO EXECUTE IN MT5 ---
+            print(f"  --> Sending Order to Exness MT5...")
+            # Using the standard signal's SL and TP, and Normal risk level
+            ticket = open_trade(pair, direction, "Normal (5%)", sl_std, tp_std)
+            if ticket:
+                print(f"  [SUCCESS] Trade executed! MT5 Ticket: {ticket}")
+            else:
+                print(f"  [FAILED] MT5 rejected the order.")
 
         except Exception as e:
             print(f"    {pair}: Error — {e}")
