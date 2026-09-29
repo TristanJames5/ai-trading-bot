@@ -24,8 +24,11 @@ def run_all_bots():
     # Start the Guru Bot
     print("-> Starting The GURU Engine (guru_engine.py)...")
     guru_bot = subprocess.Popen([sys.executable, "guru_engine.py"])
+    # Start the Discord Trinity Bot
+    print("-> Starting Trinity Discord Bot (discord_bot.py)...")
+    trinity_bot = subprocess.Popen([sys.executable, "discord_bot.py"])
     
-    print("\n✅ All 3 bots (Standard, Sentinel, and Guru) are now running simultaneously!")
+    print("\n✅ All 4 bots (Standard, Sentinel, Guru, and Trinity) are now running simultaneously!")
     print("Press Ctrl+C at any time to stop them all.\n")
     
     try:
@@ -33,11 +36,13 @@ def run_all_bots():
         standard_bot.wait()
         sentinel_bot.wait()
         guru_bot.wait()
+        trinity_bot.wait()
     except KeyboardInterrupt:
         print("\nStopping all bots...")
         standard_bot.terminate()
         sentinel_bot.terminate()
         guru_bot.terminate()
+        trinity_bot.terminate()
         print("All bots stopped.")
 
 if __name__ == "__main__":
