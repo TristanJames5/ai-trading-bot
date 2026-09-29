@@ -82,8 +82,8 @@ async def trinity_scout():
                                 contents=prompt
                             )
                             oracle_bias = ai_response.text.strip()
-                        except:
-                            oracle_bias = "Oracle offline."
+                        except Exception as e:
+                            oracle_bias = "⚠️ Oracle Offline (High API Demand)"
 
                     # Build the Rich Embed
                     embed = discord.Embed(
@@ -163,7 +163,7 @@ async def analyze_pair(ctx, pair: str):
                 )
                 oracle_response = ai_response.text.strip()
             except Exception as e:
-                oracle_response = f"LLM Error: {e}"
+                oracle_response = "⚠️ ORACLE OFFLINE (High API Demand) - Defaulting to Technicals."
         
         # Formatted output based on the new Protocol
         response = f"""
