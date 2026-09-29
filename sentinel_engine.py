@@ -300,6 +300,15 @@ def scan_all_pairs():
                 continue
                 
             if position_flag == 0 and action in [1, 2, 3, 4, 5, 6]:
+                # 5. Strict Trend Filter (NEVER trade against the Daily Bias)
+                daily_bias = int(row.get('Daily_Bias', 0))
+                if daily_bias == 1 and action in [4, 5, 6]:
+                    print(f"    🚨 VETO: Skipping SHORT on {pair} because Daily Bias is Bullish.")
+                    continue
+                if daily_bias == -1 and action in [1, 2, 3]:
+                    print(f"    🚨 VETO: Skipping LONG on {pair} because Daily Bias is Bearish.")
+                    continue
+
                 # Sentinel wants to enter a new trade
                 direction = "LONG" if action in [1, 2, 3] else "SHORT"
                 risk_level = {1: "Light (1%)", 2: "Normal (5%)", 3: "MAX (10%)",
@@ -336,12 +345,12 @@ def scan_all_pairs():
 
                 save_signal(signal_data)
                 
-                if signal_data['win_prob'] >= 0.75:
+                if signal_data['win_prob'] >= 0.80:
                     send_discord_alert(signal_data)
                     mt5_open_trade(pair, direction, risk_level, sl_std, tp_std)
                     print(f"  [MT5] 🎯 High Probability ({signal_data['win_prob']*100}%) -> Executing on FundedNext")
                 else:
-                    print(f"  [DISCORD/MT5] ⚠️ Skipping Execution: Probability ({signal_data['win_prob']*100}%) is below 75% threshold")
+                    print(f"  [DISCORD/MT5] ⚠️ Skipping Execution: Probability ({signal_data['win_prob']*100}%) is below 80% threshold")
                 
         except Exception as e:
             print(f"    {pair}: Error — {e}")
