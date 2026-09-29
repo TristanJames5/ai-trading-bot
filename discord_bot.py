@@ -81,7 +81,27 @@ async def analyze_pair(ctx, pair: str):
     
     try:
         # Fetch data
-        ticker = pair if "=" in pair else f"{pair}=X"
+        # Smart Ticker Mapping for Yahoo Finance
+        ticker_map = {
+            "US30": "^DJI",
+            "NAS100": "^IXIC",
+            "NDX": "^IXIC",
+            "SPX": "^GSPC",
+            "SP500": "^GSPC",
+            "XAUUSD": "GC=F",
+            "GOLD": "GC=F",
+            "DXY": "DX-Y.NYB",
+            "BTC": "BTC-USD",
+            "ETH": "ETH-USD"
+        }
+        
+        # Check if they used an alias, otherwise default to forex format
+        upper_pair = pair.upper()
+        if upper_pair in ticker_map:
+            ticker = ticker_map[upper_pair]
+        else:
+            ticker = pair if "=" in pair or "-" in pair or "^" in pair else f"{pair}=X"
+            
         df = yf.Ticker(ticker).history(period='5d', interval='1h')
         
         if df.empty:
