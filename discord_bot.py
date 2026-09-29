@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands, tasks
 import yfinance as yf
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
 
 # Try to import your AI engines
 try:
@@ -19,8 +19,9 @@ if not DISCORD_TOKEN:
     print("CRITICAL: DISCORD_BOT_TOKEN is missing from .env file!")
 
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+gemini_client = None
 if GEMINI_KEY and GEMINI_KEY != "PASTE_YOUR_GEMINI_KEY_HERE":
-    genai.configure(api_key=GEMINI_KEY)
+    gemini_client = genai.Client(api_key=GEMINI_KEY)
 
 # Set up the bot
 intents = discord.Intents.default()
@@ -92,11 +93,13 @@ async def analyze_pair(ctx, pair: str):
         
         # Generate Oracle response using LLM
         oracle_response = "Evaluating... (Gemini API Key missing)"
-        if GEMINI_KEY and GEMINI_KEY != "PASTE_YOUR_GEMINI_KEY_HERE":
+        if gemini_client:
             try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
                 prompt = f"Act as a ruthless macro-economic trading oracle. In exactly two short sentences, give me the current fundamental macro bias (Bullish or Bearish) for {pair} based on current US Treasury yields and DXY."
-                ai_response = model.generate_content(prompt)
+                ai_response = gemini_client.models.generate_content(
+                    model='gemini-3.8-flash',
+                    contents=prompt
+                )
                 oracle_response = ai_response.text.strip()
             except Exception as e:
                 oracle_response = f"LLM Error: {e}"
