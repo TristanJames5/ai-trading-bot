@@ -345,7 +345,8 @@ def scan_all_pairs():
                     "session":   get_session_name(now_utc.hour),
                     "rr":        round(cfg['tp_atr'] / cfg['sl_atr'], 2),
                     "time_utc":  now_utc.strftime("%Y-%m-%d %H:%M UTC"),
-                    "engine":    f"Sentinel AI [{risk_level}]"
+                    "engine":    f"Sentinel AI [{risk_level}]",
+                    "ltf_structure": reason
                 }
 
                 print(f"\n  *** 🛡️ SENTINEL FIRED SIGNAL ***")

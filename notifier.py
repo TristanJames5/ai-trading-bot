@@ -30,7 +30,8 @@ def send_discord_alert(signal: dict):
             {"name": "STOP LOSS", "value": f"```\n{signal['sl']}\n```", "inline": True},
             {"name": "TAKE PROFIT", "value": f"```\n{signal['tp']}\n```", "inline": True},
             {"name": "Risk:Reward", "value": f"1:{signal['rr']}", "inline": False},
-            {"name": "Scores", "value": f"Rules: {signal['score']}/100 | ML: {signal['win_prob']*100:.1f}%", "inline": False}
+            {"name": "Scores", "value": f"Rules: {signal['score']}/100 | ML: {signal['win_prob']*100:.1f}%", "inline": False},
+            {"name": "Market Structure", "value": signal.get('ltf_structure', 'HTF Order Block + LTF Confirmation'), "inline": False}
         ],
         "footer": {"text": "Manage your risk. Only trade 1-2%."}
     }

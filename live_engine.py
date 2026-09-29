@@ -376,7 +376,8 @@ def scan_all_pairs():
                 "session":   get_session_name(now_utc.hour),
                 "rr":        round(cfg['tp_atr'] / cfg['sl_atr'], 2),
                 "time_utc":  now_utc.strftime("%Y-%m-%d %H:%M UTC"),
-                "engine":    "v4.1 + v5 (Standard)"
+                "engine":    "v4.1 + v5 (Standard)",
+                "ltf_structure": reason
             }
 
             signal_max = {
@@ -391,7 +392,8 @@ def scan_all_pairs():
                 "session":   get_session_name(now_utc.hour),
                 "rr":        round(tp_max_atr / sl_max_atr, 2),
                 "time_utc":  now_utc.strftime("%Y-%m-%d %H:%M UTC"),
-                "engine":    "v4.1 MAX + v5 MAX (Sniper)"
+                "engine":    "v4.1 MAX + v5 MAX (Sniper)",
+                "ltf_structure": reason
             }
 
             print(f"\n  *** SIGNAL FIRED ***")
