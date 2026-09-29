@@ -1,11 +1,8 @@
-xgboost>=2.0.3
-yfinance>=0.2.36
+discord.py
+python-dotenv
+yfinance
+xgboost
 pandas
 numpy
-scikit-learn
-supabase>=2.3.4
-schedule>=1.2.1
-python-dotenv>=1.0.1
-torch
-transformers
-stable-baselines3
+google-genai
+requests
