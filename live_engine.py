@@ -204,7 +204,10 @@ def get_features(pair, cfg):
     latest['Price_SMA50'] = (price - float(latest['SMA50'])) / (atr + 1e-9)
     latest['EMA_Cross']   = int(float(latest['EMA9']) > float(latest['EMA21']))
     latest['RSI_norm']    = float(latest['RSI']) / 100
-    latest['Session']     = session_code(latest.name.hour)
+    # Extract UTC hour safely whether index is tz-aware or tz-naive
+    idx = latest.name
+    utc_hour = idx.tz_convert('UTC').hour if idx.tzinfo is not None else idx.hour
+    latest['Session']     = session_code(utc_hour)
 
     return latest, df_1h
 
@@ -271,6 +274,7 @@ def v41_score(row, bias):
 # MAIN SCAN LOOP
 # ─────────────────────────────────────────
 fired_today = set()   # Prevent duplicate signals same candle
+_fired_today_date = None  # Track which UTC date fired_today belongs to
 
 def check_active_trades():
     """Check open signals against current price to see if they hit TP or SL."""
@@ -315,8 +319,16 @@ def check_active_trades():
             print(f"  [ERROR] Trade tracker failed for {pair}: {e}")
 
 def scan_all_pairs():
+    global fired_today, _fired_today_date
     now_utc = datetime.now(timezone.utc)
     hour    = now_utc.hour
+    
+    # Reset fired_today at midnight UTC to allow fresh signals each day
+    today_date = now_utc.date()
+    if _fired_today_date != today_date:
+        fired_today.clear()
+        _fired_today_date = today_date
+        print(f"  [RESET] fired_today cleared for new day: {today_date}")
 
     # Only scan during kill zones
     if not is_kill_zone(hour):
@@ -423,7 +435,6 @@ def scan_all_pairs():
 
             send_discord_alert(signal_std)
             save_signal(signal_std)
-            import time
             time.sleep(1) # Prevent discord rate limit
             send_discord_alert(signal_max)
             save_signal(signal_max)

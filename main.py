@@ -2,7 +2,10 @@ from fastapi import FastAPI, Request, HTTPException
 import uvicorn
 from pydantic import BaseModel
 import logging
+import os
+from dotenv import load_dotenv
 from typing import Optional
+load_dotenv()
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -22,7 +25,9 @@ class TradingViewAlert(BaseModel):
     ob_detected: bool = False
     request_bias: bool = False
 
-WEBHOOK_PASSPHRASE = "your_secure_passphrase_here"
+WEBHOOK_PASSPHRASE = os.getenv("WEBHOOK_PASSPHRASE", "")
+if not WEBHOOK_PASSPHRASE:
+    raise RuntimeError("WEBHOOK_PASSPHRASE not set in .env file — refusing to start.")
 
 @app.get("/")
 def read_root():

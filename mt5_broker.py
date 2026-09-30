@@ -31,7 +31,6 @@ def map_symbol(pair_name):
     elif pair_name == "BTC": base = "BTCUSD"
     
     # Try to find the exact symbol in MT5 (e.g. BTCUSDm)
-    import MetaTrader5 as mt5
     symbols = mt5.symbols_get(group=f"*{base}*")
     if symbols:
         # Return the first one that matches
@@ -42,8 +41,20 @@ def map_symbol(pair_name):
     return base
 
 def open_trade(pair_name, direction, risk_level, sl, tp):
-    """Opens a market order."""
+    """Opens a market order. Returns None if daily loss limit is breached."""
     if not init_mt5(): return None
+    
+    # --- PROP FIRM DAILY LOSS GUARD ---
+    # Block new trades if account has dropped > 3.5% from start of day equity
+    # (Prop firm limit is 4%, we stop at 3.5% to leave a safety buffer)
+    acc_check = mt5.account_info()
+    if acc_check:
+        balance     = acc_check.balance
+        equity      = acc_check.equity
+        daily_dd    = (balance - equity) / balance if balance > 0 else 0
+        if daily_dd > 0.035:
+            print(f"  [GUARD] Daily loss limit at {daily_dd:.1%} — NO NEW TRADES until tomorrow.")
+            return None
     
     symbol = map_symbol(pair_name)
     

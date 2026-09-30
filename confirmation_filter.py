@@ -14,8 +14,13 @@ def check_ltf_confirmation(ticker, direction, interval="15m", period="3d"):
             return False, "Not enough LTF data"
             
         # 2. Identify Swing Highs and Swing Lows on LTF
-        df['Pivot_Low'] = df['Low'] == df['Low'].rolling(window=5, center=True).min()
-        df['Pivot_High'] = df['High'] == df['High'].rolling(window=5, center=True).max()
+        # Use min_periods=1 left-sided rolling so recent candles are always visible
+        # (center=True was blinding the filter to the last 2 candles — fixed)
+        lookback = 5
+        df['Pivot_Low']  = (df['Low']  == df['Low'].rolling(window=lookback, min_periods=1).min()) & \
+                           (df['Low']  == df['Low'].shift(1).rolling(window=lookback, min_periods=1).min())
+        df['Pivot_High'] = (df['High'] == df['High'].rolling(window=lookback, min_periods=1).max()) & \
+                           (df['High'] == df['High'].shift(1).rolling(window=lookback, min_periods=1).max())
         
         lows = df[df['Pivot_Low']]['Low']
         highs = df[df['Pivot_High']]['High']

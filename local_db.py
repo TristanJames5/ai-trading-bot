@@ -6,7 +6,7 @@ Zero setup, zero limits, runs offline, 100% free.
 """
 
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 DB_FILE = "trading_data.db"
 
@@ -69,7 +69,7 @@ def save_signal(signal: dict):
             signal['session'],
             signal['win_prob'],
             signal['rr'],
-            datetime.utcnow().isoformat()
+            datetime.now(timezone.utc).isoformat()
         ))
         
         conn.commit()
@@ -95,7 +95,7 @@ def log_trade_result(signal_id: int, result: str, pnl_r: float, notes: str = "")
             result,
             pnl_r,
             notes,
-            datetime.utcnow().isoformat()
+            datetime.now(timezone.utc).isoformat()
         ))
         
         conn.commit()
@@ -113,11 +113,14 @@ def get_active_signals():
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
         
+        # Only track signals from the last 7 days to prevent endless stale signal tracking
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
         c.execute('''
             SELECT s.* FROM signals s
             LEFT JOIN trade_journal tj ON s.id = tj.signal_id
             WHERE tj.id IS NULL
-        ''')
+            AND s.fired_at > ?
+        ''', (cutoff,))
         
         rows = c.fetchall()
         conn.close()
