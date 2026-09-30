@@ -286,35 +286,46 @@ def check_active_trades():
         if pair not in PAIRS: continue
         ticker = PAIRS[pair]['ticker']
         try:
-            df = yf.Ticker(ticker).history(period="1d", interval="5m")
+            df = yf.Ticker(ticker).history(period="5d", interval="5m")
             if df.empty: continue
             current_price = float(df['Close'].iloc[-1])
+            entry = float(sig['entry'])
             
             if sig['direction'] == "LONG":
                 # Check for Break-Even at 1.0R
-                risk_distance = sig['entry'] - sig['sl']
-                if current_price >= sig['entry'] + risk_distance:
-                    move_sl_to_be(pair, sig['entry'])
+                risk_distance = entry - sig['sl']
+                if current_price >= entry + risk_distance:
+                    move_sl_to_be(pair, entry)
                     
                 if current_price >= sig['tp']:
                     log_trade_result(sig['id'], "WIN", sig['rr'], "Hit TP")
                     send_discord_result(sig, "WIN", sig['rr'])
                 elif current_price <= sig['sl']:
-                    log_trade_result(sig['id'], "LOSS", -1.0, "Hit SL")
-                    send_discord_result(sig, "LOSS", -1.0)
+                    # Detect break-even close: SL was moved to entry
+                    if abs(sig['sl'] - entry) < 0.0001 * entry:
+                        log_trade_result(sig['id'], "BE", 0.0, "Hit SL at Break-Even")
+                        send_discord_result(sig, "BE", 0.0)
+                    else:
+                        log_trade_result(sig['id'], "LOSS", -1.0, "Hit SL")
+                        send_discord_result(sig, "LOSS", -1.0)
                     
             elif sig['direction'] == "SHORT":
                 # Check for Break-Even at 1.0R
-                risk_distance = sig['sl'] - sig['entry']
-                if current_price <= sig['entry'] - risk_distance:
-                    move_sl_to_be(pair, sig['entry'])
+                risk_distance = sig['sl'] - entry
+                if current_price <= entry - risk_distance:
+                    move_sl_to_be(pair, entry)
                     
                 if current_price <= sig['tp']:
                     log_trade_result(sig['id'], "WIN", sig['rr'], "Hit TP")
                     send_discord_result(sig, "WIN", sig['rr'])
                 elif current_price >= sig['sl']:
-                    log_trade_result(sig['id'], "LOSS", -1.0, "Hit SL")
-                    send_discord_result(sig, "LOSS", -1.0)
+                    # Detect break-even close: SL was moved to entry
+                    if abs(sig['sl'] - entry) < 0.0001 * entry:
+                        log_trade_result(sig['id'], "BE", 0.0, "Hit SL at Break-Even")
+                        send_discord_result(sig, "BE", 0.0)
+                    else:
+                        log_trade_result(sig['id'], "LOSS", -1.0, "Hit SL")
+                        send_discord_result(sig, "LOSS", -1.0)
         except Exception as e:
             print(f"  [ERROR] Trade tracker failed for {pair}: {e}")
 
